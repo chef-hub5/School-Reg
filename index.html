@@ -261,10 +261,12 @@
                 
                 <div class="mb-6">
                     <label class="block text-white/90 text-sm font-medium mb-2">Enter Student ID to Search</label>
-                    <input type="text" id="searchName" placeholder="Enter student ID (e.g., ABC1234)" class="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all mb-3">
-                    <button onclick="searchStudent()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold btn-hover">
-                        Search Student
-                    </button>
+                    <div class="flex gap-3">
+                        <input type="text" id="searchName" placeholder="Enter student ID (e.g., ABC1234)" class="flex-1 px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all">
+                        <button onclick="searchStudent()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold btn-hover">
+                            Search
+                        </button>
+                    </div>
                 </div>
                 
                 <div id="searchResults" class="hidden">
@@ -293,10 +295,12 @@
                 <!-- Student ID Verification -->
                 <div class="mb-8">
                     <label class="block text-white/90 text-sm font-medium mb-2">Student ID</label>
-                    <input type="text" id="paymentStudentId" placeholder="Enter your unique student ID" class="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all mb-3">
-                    <button onclick="verifyStudentForPayment()" class="w-full bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold btn-hover">
-                        Verify Student ID
-                    </button>
+                    <div class="flex gap-3">
+                        <input type="text" id="paymentStudentId" placeholder="Enter your unique student ID" class="flex-1 px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all">
+                        <button onclick="verifyStudentForPayment()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold btn-hover">
+                            Verify ID
+                        </button>
+                    </div>
                 </div>
                 
                 <div id="paymentOptions" class="hidden">
@@ -424,21 +428,6 @@
             }
         }
 
-        // Submit data with file to Google Sheets
-        async function submitToGoogleSheetsWithFile(url, formData) {
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: formData // FormData automatically sets correct headers
-                });
-                return true;
-            } catch (error) {
-                console.error('Error submitting file to Google Sheets:', error);
-                return false;
-            }
-        }
-
         // Calculate age from date of birth
         function calculateAge() {
             const dobInput = document.getElementById('dob');
@@ -508,41 +497,39 @@
             // Generate student ID immediately
             const studentId = generateStudentId();
             
-            // Convert image to base64 for local storage and display
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const imageBase64 = e.target.result;
-                
-                // Create form data with proper image handling
-                const formData = {
-                    id: studentId,
-                    firstName: document.getElementById('firstName').value,
-                    lastName: document.getElementById('lastName').value,
-                    email: document.getElementById('email').value,
-                    phone: document.getElementById('phone').value,
-                    dob: document.getElementById('dob').value,
-                    age: document.getElementById('age').value,
-                    grade: document.getElementById('grade').value,
-                    address: document.getElementById('address').value,
-                    photoName: photoFile.name,
-                    photoType: photoFile.type,
-                    photoSize: photoFile.size,
-                    photoBase64: imageBase64, // Store base64 for local display
-                    registrationDate: new Date().toISOString().split('T')[0],
-                    timestamp: new Date().toISOString()
-                };
+            // Create form data without heavy image processing
+            const formData = {
+                id: studentId,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                dob: document.getElementById('dob').value,
+                age: document.getElementById('age').value,
+                grade: document.getElementById('grade').value,
+                address: document.getElementById('address').value,
+                photo: photoFile.name, // Just store filename instead of full image
+                registrationDate: new Date().toISOString().split('T')[0],
+                timestamp: new Date().toISOString()
+            };
             
-                // Create FormData object for proper file upload
-                const uploadData = new FormData();
-                uploadData.append('action', 'registration');
-                uploadData.append('studentData', JSON.stringify(formData));
-                uploadData.append('studentPhoto', photoFile); // Actual image file
+            // 4-second registration process with progress
+            let progress = 0;
+            const progressMessages = [
+                'Validating information...',
+                'Generating Student ID...',
+                'Creating student profile...',
+                'Finalizing registration...'
+            ];
+            
+            const progressInterval = setInterval(() => {
+                submitBtn.textContent = progressMessages[progress] + ' (' + (progress + 1) + '/4)';
+                progress++;
                 
-                // 4-second registration process
-                submitBtn.textContent = 'Processing registration...';
-                
-                setTimeout(() => {
-                    // Save to local storage with base64 image
+                if (progress >= 4) {
+                    clearInterval(progressInterval);
+                    
+                    // Save to local storage
                     students.push(formData);
                     localStorage.setItem('students', JSON.stringify(students));
                     
@@ -569,17 +556,17 @@
                         submitBtn.classList.add('bg-gradient-to-r', 'from-blue-500', 'to-purple-600');
                     }, 3000);
                     
-                    // Submit to Google Sheets in background (non-blocking) with actual image file
-                    submitToGoogleSheetsWithFile(SCRIPT_URL, uploadData).then(success => {
+                    // Submit to Google Sheets in background (non-blocking)
+                    submitToGoogleSheets(SCRIPT_URL, {
+                        action: 'registration',
+                        ...formData
+                    }).then(success => {
                         if (!success) {
                             console.log('Background sync to Google Sheets failed');
                         }
                     });
-                }, 4000); // 4 seconds total
-            };
-            
-            // Read the file as base64
-            reader.readAsDataURL(photoFile);
+                }
+            }, 1000); // 1 second intervals for 4 seconds total
         });
 
         // Search student
@@ -594,17 +581,13 @@
             const student = students.find(s => s.id === searchId);
             
             if (student) {
-                const photoDisplay = student.photoBase64 
-                    ? `<img src="${student.photoBase64}" alt="Student Photo" class="w-32 h-32 rounded-lg object-cover border-2 border-white/20">`
-                    : `<div class="w-32 h-32 rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center border-2 border-white/20">
-                        <span class="text-white text-4xl font-bold">${student.firstName.charAt(0)}${student.lastName.charAt(0)}</span>
-                       </div>`;
-                
                 document.getElementById('studentInfo').innerHTML = `
                     <div class="flex flex-col md:flex-row gap-6">
                         <div class="flex-shrink-0">
-                            ${photoDisplay}
-                            <p class="text-center text-white/60 text-sm mt-2">Photo: ${student.photoName || student.photo || 'No photo'}</p>
+                            <div class="w-32 h-32 rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center border-2 border-white/20">
+                                <span class="text-white text-4xl font-bold">${student.firstName.charAt(0)}${student.lastName.charAt(0)}</span>
+                            </div>
+                            <p class="text-center text-white/60 text-sm mt-2">Photo: ${student.photo}</p>
                         </div>
                         <div class="flex-1">
                             <div class="grid md:grid-cols-2 gap-4">
@@ -651,16 +634,12 @@
                 currentStudentId = studentId;
                 
                 // Display student information
-                const paymentPhotoDisplay = student.photoBase64 
-                    ? `<img src="${student.photoBase64}" alt="Student Photo" class="w-24 h-24 rounded-lg object-cover border-2 border-white/20">`
-                    : `<div class="w-24 h-24 rounded-lg bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center border-2 border-white/20">
-                        <span class="text-white text-2xl font-bold">${student.firstName.charAt(0)}${student.lastName.charAt(0)}</span>
-                       </div>`;
-                
                 document.getElementById('paymentStudentDetails').innerHTML = `
                     <div class="flex flex-col md:flex-row gap-6">
                         <div class="flex-shrink-0">
-                            ${paymentPhotoDisplay}
+                            <div class="w-24 h-24 rounded-lg bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center border-2 border-white/20">
+                                <span class="text-white text-2xl font-bold">${student.firstName.charAt(0)}${student.lastName.charAt(0)}</span>
+                            </div>
                         </div>
                         <div class="flex-1">
                             <div class="grid md:grid-cols-2 gap-3 text-sm">
@@ -743,28 +722,25 @@
                 submissionDate: new Date().toISOString().split('T')[0]
             };
             
-            // Fast 1-second processing
-            setTimeout(() => {
-                // Reset button
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-                
-                // Show immediate success
-                showNotification('Payment submitted successfully! We will verify and update your account within 24 hours.');
-                
-                // Close portal
-                closePaymentPortal();
-                
-                // Submit to Google Sheets in background (non-blocking)
-                submitToGoogleSheets(SCRIPT_URL, {
-                    action: 'payment',
-                    ...paymentData
-                }).then(success => {
-                    if (!success) {
-                        console.log('Background sync to Google Sheets failed');
-                    }
-                });
-            }, 1000); // Just 1 second
+            // Reset button immediately
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+            
+            // Show immediate success
+            showNotification('Payment submitted successfully! We will verify and update your account within 24 hours.');
+            
+            // Close portal immediately
+            closePaymentPortal();
+            
+            // Submit to Google Sheets in background (non-blocking)
+            submitToGoogleSheets(SCRIPT_URL, {
+                action: 'payment',
+                ...paymentData
+            }).then(success => {
+                if (!success) {
+                    console.log('Background sync to Google Sheets failed');
+                }
+            });
         }
 
         // Mobile menu functions
@@ -797,5 +773,5 @@
         // Initialize with home section
         showSection('home');
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f277f4c6ef3a4f',t:'MTc1NTE5NTY1MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f1b5b6956fbbd1',t:'MTc1NTE4NzY5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
