@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greenwood Academy - Student Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .animate-pulse-hover:hover {
+            animation: pulse 0.3s ease-in-out;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .btn-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <!-- Navigation -->
+    <nav class="bg-white/10 backdrop-blur-md border-b border-white/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16 lg:h-20">
+                <!-- Logo and Brand -->
+                <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity" onclick="showSection('home'); closeMobileMenu()">
+                    <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9d1?w=100&h=100&fit=crop&crop=center" alt="Greenwood Academy" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover">
+                    <span class="text-white text-lg sm:text-xl lg:text-2xl font-bold truncate">Greenwood Academy</span>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden lg:flex space-x-6">
+                    <button onclick="showSection('home')" class="text-white hover:text-blue-200 px-4 py-2 rounded-md transition-colors font-medium">Home</button>
+                    <button onclick="showSection('registration')" class="text-white hover:text-blue-200 px-4 py-2 rounded-md transition-colors font-medium">Registration</button>
+                    <button onclick="showSection('lookup')" class="text-white hover:text-blue-200 px-4 py-2 rounded-md transition-colors font-medium">Student Lookup</button>
+                    <button onclick="showSection('payments')" class="text-white hover:text-blue-200 px-4 py-2 rounded-md transition-colors font-medium">Payments</button>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <div class="lg:hidden">
+                    <button onclick="toggleMobileMenu()" class="text-white hover:text-blue-200 p-2 rounded-md transition-colors">
+                        <svg id="menuIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                        <svg id="closeIcon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Navigation Menu -->
+            <div id="mobileMenu" class="lg:hidden hidden border-t border-white/20 mt-4 pt-4 pb-4">
+                <div class="flex flex-col space-y-3">
+                    <button onclick="showSection('home'); closeMobileMenu()" class="text-white hover:text-blue-200 hover:bg-white/10 px-3 py-2 rounded-md transition-all text-left font-medium">Home</button>
+                    <button onclick="showSection('registration'); closeMobileMenu()" class="text-white hover:text-blue-200 hover:bg-white/10 px-3 py-2 rounded-md transition-all text-left font-medium">Registration</button>
+                    <button onclick="showSection('lookup'); closeMobileMenu()" class="text-white hover:text-blue-200 hover:bg-white/10 px-3 py-2 rounded-md transition-all text-left font-medium">Student Lookup</button>
+                    <button onclick="showSection('payments'); closeMobileMenu()" class="text-white hover:text-blue-200 hover:bg-white/10 px-3 py-2 rounded-md transition-all text-left font-medium">Payments</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Notification -->
+    <div id="notification" class="notification bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+        <span id="notificationText"></span>
+    </div>
+
+    <!-- Home Section -->
+    <div id="homeSection" class="section">
+        <!-- Hero Section with Video Background -->
+        <div class="relative h-96 overflow-hidden">
+            <video autoplay muted loop class="absolute inset-0 w-full h-full object-cover">
+                <source src="New folder/video.mp4" type="video/mp4">
+                <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4">
+                <!-- Fallback to a beautiful education-themed image if video fails -->
+                <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9d1?w=1200&h=400&fit=crop" alt="School Campus" class="absolute inset-0 w-full h-full object-cover">
+            </video>
+            <div class="absolute inset-0 bg-gradient-to-r from-purple-900/70 to-blue-900/70"></div>
+            <div class="relative z-10 flex items-center justify-center h-full text-center">
+                <div class="animate-fadeInUp">
+                    <h1 class="text-5xl font-bold text-white mb-4">Welcome to Greenwood Academy</h1>
+                    <p class="text-xl text-white/90 mb-8">Excellence in Education, Innovation in Learning</p>
+                    <button onclick="showSection('registration')" class="bg-white text-purple-700 px-8 py-3 rounded-full font-semibold btn-hover animate-pulse-hover">
+                        Start Registration
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Welcome Message -->
+        <div class="max-w-4xl mx-auto px-4 py-16">
+            <div class="text-center mb-12 animate-fadeInUp">
+                <h2 class="text-3xl font-bold text-white mb-6">Your Educational Journey Starts Here</h2>
+                <p class="text-lg text-white/80 leading-relaxed">
+                    At Greenwood Academy, we're committed to providing world-class education that prepares students for success in an ever-changing world. 
+                    Our comprehensive registration system makes it easy to join our community of learners, track your progress, and manage your academic journey.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white/10 backdrop-blur-md rounded-lg p-6 card-hover">
+                    <div class="text-4xl mb-4">📚</div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Easy Registration</h3>
+                    <p class="text-white/70">Quick and simple student registration process with instant ID generation</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md rounded-lg p-6 card-hover">
+                    <div class="text-4xl mb-4">🔍</div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Student Lookup</h3>
+                    <p class="text-white/70">Find and verify student information quickly using our search system</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md rounded-lg p-6 card-hover">
+                    <div class="text-4xl mb-4">💳</div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Secure Payments</h3>
+                    <p class="text-white/70">Safe and convenient fee payment system with receipt management</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Section -->
+    <div id="registrationSection" class="section hidden">
+        <div class="max-w-2xl mx-auto px-4 py-12">
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-8 card-hover animate-fadeInUp">
+                <h2 class="text-3xl font-bold text-white mb-8 text-center">Student Registration</h2>
+                <form id="registrationForm" class="space-y-6">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-white/90 text-sm font-medium mb-2">First Name</label>
+                            <input type="text" id="firstName" required class="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-white/90 text-sm font-medium mb-2">Last Name</label>
+                            <input type="text" id="lastName" required class="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white/90 text-sm font-medium mb-2">Email Address</label>
+                        <input type="email" id="email" required class="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white/90 text-sm font-medium mb-2">Phone Number</label>
+                        <input type="tel" id="phone" required maxlength="11" pattern="[0-9]{11}" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="Enter 11-digit phone number" class="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white/90 text-sm font-medium mb-2">Date of Birth</label>
+                        <input type="date" id="dob" required onchange="calculateAge()" class="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white/90 text-sm font-medium mb-2">Age</label>
+                        <input type="text" id="age" readonly class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white/70 cursor-not-allowed">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white/90 text-sm font-medium mb-2">Grade Level</label>
+                        <select id="grade" required class="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all" style="color-scheme: light;">
+                            <option value="" style="background-color: white; color: black;">Select Grade</option>
+                            <option value="K" style="background-color: white; color: black;">Kindergarten</option>
+                            <option value="1" style="background-color: white; color: black;">Grade 1</option>
+                            <option value="2" style="background-color: white; color: black;">Grade 2</option>
+                            <option value="3" style="background-color: white; color: black;">Grade 3</option>
+                            <option value="4" style="background-color: white; color: black;">Grade 4</option>
+                            <option value="5" style="background-color: white; color: black;">Grade 5</option>
+                            <option value="6" style="background-color: white; color: black;">Grade 6</option>
+                            <option value="7" style="background-color: white; color: black;">Grade 7</option>
+                            <option value="8" style="background-color: white; color: black;">Grade 8</option>
+                            <option value="9" style="background-color: white; color: black;">Grade 9</option>
+                            <option value="10" style="background-color: white; color: black;">Grade 10</option>
+                            <option value="11" style="background-color: white; color: black;">Grade 11</option>
+                            <option value="12" style="background-color: white; color: black;">Grade 12</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white/90 text-sm font-medium mb-2">Student Photo *</label>
+                        <input type="file" id="studentPhoto" accept="image/*" required class="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600 transition-all">
+                        <p class="text-white/60 text-sm mt-2">Please upload a clear photo of the student (JPG, PNG, or GIF)</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white/90 text-sm font-medium mb-2">Address</label>
+                        <textarea id="address" required rows="3" class="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold btn-hover animate-pulse-hover">
+                        Register Student
+                    </button>
+                </form>
+                
+                <div id="registrationResult" class="hidden mt-6 p-4 bg-green-500/20 border border-green-400/30 rounded-lg">
+                    <h3 class="text-green-300 font-semibold mb-2">Registration Successful!</h3>
+                    <p class="text-white">Student ID: <span id="generatedId" class="font-mono font-bold"></span></p>
+                    <p class="text-white/80 text-sm mt-2">Please save this ID for future reference and fee payments.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Lookup Section -->
+    <div id="lookupSection" class="section hidden">
+        <div class="max-w-2xl mx-auto px-4 py-12">
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-8 card-hover animate-fadeInUp">
+                <h2 class="text-3xl font-bold text-white mb-8 text-center">Student Lookup</h2>
+                
+                <div class="mb-6">
+                    <label class="block text-white/90 text-sm font-medium mb-2">Enter Student ID to Search</label>
+                    <div class="flex gap-3">
+                        <input type="text" id="searchName" placeholder="Enter student ID (e.g., ABC1234)" class="flex-1 px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all">
+                        <button onclick="searchStudent()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold btn-hover">
+                            Search
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="searchResults" class="hidden">
+                    <div class="bg-white/5 rounded-lg p-6 border border-white/20">
+                        <h3 class="text-xl font-semibold text-white mb-4">Student Information</h3>
+                        <div id="studentInfo" class="space-y-3 text-white/90">
+                            <!-- Student info will be populated here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="noResults" class="hidden text-center py-8">
+                    <div class="text-6xl mb-4">🔍</div>
+                    <p class="text-white/70">No student found with that ID. Please check the Student ID and try again.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payments Section -->
+    <div id="paymentsSection" class="section hidden">
+        <div class="max-w-4xl mx-auto px-4 py-12">
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-8 card-hover animate-fadeInUp">
+                <h2 class="text-3xl font-bold text-white mb-8 text-center">School Fees & Payments</h2>
+                
+                <!-- Student ID Verification -->
+                <div class="mb-8">
+                    <label class="block text-white/90 text-sm font-medium mb-2">Student ID</label>
+                    <div class="flex gap-3">
+                        <input type="text" id="paymentStudentId" placeholder="Enter your unique student ID" class="flex-1 px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all">
+                        <button onclick="verifyStudentForPayment()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold btn-hover">
+                            Verify ID
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="paymentOptions" class="hidden">
+                    <div id="verifiedStudentInfo" class="mb-8 bg-white/5 rounded-lg p-6 border border-white/20">
+                        <h3 class="text-xl font-semibold text-white mb-4">Verified Student Information</h3>
+                        <div id="paymentStudentDetails" class="text-white/90">
+                            <!-- Student details will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white/5 rounded-lg p-6 border border-white/20 card-hover">
+                            <h3 class="text-xl font-semibold text-white mb-4">📚 Tuition Fees</h3>
+                            <p class="text-white/70 mb-4">Pay your semester or annual tuition fees</p>
+                            <div class="text-2xl font-bold text-green-400 mb-4">$2,500</div>
+                            <button onclick="openPaymentPortal('tuition')" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold btn-hover">
+                                Pay Tuition
+                            </button>
+                        </div>
+                        
+                        <div class="bg-white/5 rounded-lg p-6 border border-white/20 card-hover">
+                            <h3 class="text-xl font-semibold text-white mb-4">🎒 Other Fees</h3>
+                            <p class="text-white/70 mb-4">Books, supplies, activities, and other fees</p>
+                            <div class="text-2xl font-bold text-green-400 mb-4">$450</div>
+                            <button onclick="openPaymentPortal('other')" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold btn-hover">
+                                Pay Other Fees
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="paymentPortal" class="hidden">
+                    <div class="bg-white/5 rounded-lg p-6 border border-white/20">
+                        <h3 class="text-xl font-semibold text-white mb-6">Bank Transfer Details</h3>
+                        
+                        <div class="space-y-4 mb-6">
+                            <div class="flex justify-between items-center p-3 bg-white/10 rounded-lg">
+                                <span class="text-white/90">Bank Name:</span>
+                                <span class="text-white font-semibold">Greenwood Academy Bank</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-white/10 rounded-lg">
+                                <span class="text-white/90">Account Name:</span>
+                                <span class="text-white font-semibold">Greenwood Academy</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-white/10 rounded-lg">
+                                <span class="text-white/90">Account Number:</span>
+                                <div class="flex items-center gap-2">
+                                    <span id="accountNumber" class="text-white font-mono font-bold">1234567890</span>
+                                    <button onclick="copyAccountNumber()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm btn-hover">
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-white/10 rounded-lg">
+                                <span class="text-white/90">Amount:</span>
+                                <span id="paymentAmount" class="text-green-400 font-bold text-lg"></span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-white/10 rounded-lg">
+                                <span class="text-white/90">Reference:</span>
+                                <span id="paymentReference" class="text-white font-mono"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-white/90 text-sm font-medium mb-2">Upload Payment Receipt</label>
+                            <input type="file" id="receiptUpload" accept="image/*,.pdf" class="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600 transition-all">
+                        </div>
+                        
+                        <div class="flex gap-4">
+                            <button onclick="submitPayment()" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-lg font-semibold btn-hover">
+                                Submit Payment
+                            </button>
+                            <button onclick="closePaymentPortal()" class="px-6 py-3 border border-white/30 text-white rounded-lg hover:bg-white/10 transition-all">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="paymentIdRequired" class="text-center py-8">
+                    <div class="text-6xl mb-4">🆔</div>
+                    <p class="text-white/70">Please enter and verify your Student ID to access payment options.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Student data storage
+        let students = JSON.parse(localStorage.getItem('students')) || [];
+        let currentPaymentType = '';
+        let currentStudentId = '';
+        
+        // Single Google Apps Script URL for both registration and payments
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwT3HHuufEmmSnVCzDtB7gJpyL0Mk8ujmF38m9icPzUh4T-uFsmEkvtBhMER41w127H/exec';
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            notification.className = `notification ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white px-6 py-3 rounded-lg shadow-lg show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Submit data to Google Sheets
+        async function submitToGoogleSheets(url, data) {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                return true;
+            } catch (error) {
+                console.error('Error submitting to Google Sheets:', error);
+                return false;
+            }
+        }
+
+        // Calculate age from date of birth
+        function calculateAge() {
+            const dobInput = document.getElementById('dob');
+            const ageInput = document.getElementById('age');
+            
+            if (dobInput.value) {
+                const dob = new Date(dobInput.value);
+                const today = new Date();
+                let age = today.getFullYear() - dob.getFullYear();
+                const monthDiff = today.getMonth() - dob.getMonth();
+                
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                    age--;
+                }
+                
+                ageInput.value = age + ' years old';
+            } else {
+                ageInput.value = '';
+            }
+        }
+
+        // Generate unique student ID
+        function generateStudentId() {
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const numbers = '0123456789';
+            let id = '';
+            
+            // Generate 3 letters
+            for (let i = 0; i < 3; i++) {
+                id += letters.charAt(Math.floor(Math.random() * letters.length));
+            }
+            
+            // Generate 4 numbers
+            for (let i = 0; i < 4; i++) {
+                id += numbers.charAt(Math.floor(Math.random() * numbers.length));
+            }
+            
+            return id;
+        }
+
+        // Show section
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionName + 'Section').classList.remove('hidden');
+        }
+
+        // Registration form submission
+        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const photoFile = document.getElementById('studentPhoto').files[0];
+            if (!photoFile) {
+                showNotification('Please upload a student photo', 'error');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            
+            // Generate student ID immediately
+            const studentId = generateStudentId();
+            
+            // Create form data without heavy image processing
+            const formData = {
+                id: studentId,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                dob: document.getElementById('dob').value,
+                age: document.getElementById('age').value,
+                grade: document.getElementById('grade').value,
+                address: document.getElementById('address').value,
+                photo: photoFile.name, // Just store filename instead of full image
+                registrationDate: new Date().toISOString().split('T')[0],
+                timestamp: new Date().toISOString()
+            };
+            
+            // 4-second registration process with progress
+            let progress = 0;
+            const progressMessages = [
+                'Validating information...',
+                'Generating Student ID...',
+                'Creating student profile...',
+                'Finalizing registration...'
+            ];
+            
+            const progressInterval = setInterval(() => {
+                submitBtn.textContent = progressMessages[progress] + ' (' + (progress + 1) + '/4)';
+                progress++;
+                
+                if (progress >= 4) {
+                    clearInterval(progressInterval);
+                    
+                    // Save to local storage
+                    students.push(formData);
+                    localStorage.setItem('students', JSON.stringify(students));
+                    
+                    // Show success message
+                    document.getElementById('generatedId').textContent = studentId;
+                    document.getElementById('registrationResult').classList.remove('hidden');
+                    
+                    // Update button to show success
+                    submitBtn.textContent = '✅ Registration Complete! ID: ' + studentId;
+                    submitBtn.classList.remove('bg-gradient-to-r', 'from-blue-500', 'to-purple-600');
+                    submitBtn.classList.add('bg-green-500');
+                    
+                    // Reset form
+                    document.getElementById('registrationForm').reset();
+                    
+                    // Show success notification
+                    showNotification('Student registered successfully! ID: ' + studentId);
+                    
+                    // Reset button after 3 seconds
+                    setTimeout(() => {
+                        submitBtn.textContent = originalText;
+                        submitBtn.disabled = false;
+                        submitBtn.classList.remove('bg-green-500');
+                        submitBtn.classList.add('bg-gradient-to-r', 'from-blue-500', 'to-purple-600');
+                    }, 3000);
+                    
+                    // Submit to Google Sheets in background (non-blocking)
+                    submitToGoogleSheets(SCRIPT_URL, {
+                        action: 'registration',
+                        ...formData
+                    }).then(success => {
+                        if (!success) {
+                            console.log('Background sync to Google Sheets failed');
+                        }
+                    });
+                }
+            }, 1000); // 1 second intervals for 4 seconds total
+        });
+
+        // Search student
+        function searchStudent() {
+            const searchId = document.getElementById('searchName').value.trim();
+            
+            if (!searchId) {
+                showNotification('Please enter a Student ID to search', 'error');
+                return;
+            }
+            
+            const student = students.find(s => s.id === searchId);
+            
+            if (student) {
+                document.getElementById('studentInfo').innerHTML = `
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <div class="flex-shrink-0">
+                            <div class="w-32 h-32 rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center border-2 border-white/20">
+                                <span class="text-white text-4xl font-bold">${student.firstName.charAt(0)}${student.lastName.charAt(0)}</span>
+                            </div>
+                            <p class="text-center text-white/60 text-sm mt-2">Photo: ${student.photo}</p>
+                        </div>
+                        <div class="flex-1">
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div><strong>Student ID:</strong> ${student.id}</div>
+                                <div><strong>Name:</strong> ${student.firstName} ${student.lastName}</div>
+                                <div><strong>Email:</strong> ${student.email}</div>
+                                <div><strong>Phone:</strong> ${student.phone}</div>
+                                <div><strong>Grade:</strong> ${student.grade}</div>
+                                <div><strong>Date of Birth:</strong> ${student.dob}</div>
+                                <div><strong>Age:</strong> ${student.age || 'Not specified'}</div>
+                                <div class="md:col-span-2"><strong>Address:</strong> ${student.address}</div>
+                                <div><strong>Registration Date:</strong> ${student.registrationDate}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('searchResults').classList.remove('hidden');
+                document.getElementById('noResults').classList.add('hidden');
+            } else {
+                document.getElementById('searchResults').classList.add('hidden');
+                document.getElementById('noResults').classList.remove('hidden');
+            }
+        }
+
+        // Add Enter key functionality for search
+        document.getElementById('searchName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchStudent();
+            }
+        });
+
+        // Verify student for payment
+        function verifyStudentForPayment() {
+            const studentId = document.getElementById('paymentStudentId').value.trim();
+            
+            if (!studentId) {
+                showNotification('Please enter a Student ID', 'error');
+                return;
+            }
+            
+            const student = students.find(s => s.id === studentId);
+            
+            if (student) {
+                currentStudentId = studentId;
+                
+                // Display student information
+                document.getElementById('paymentStudentDetails').innerHTML = `
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <div class="flex-shrink-0">
+                            <div class="w-24 h-24 rounded-lg bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center border-2 border-white/20">
+                                <span class="text-white text-2xl font-bold">${student.firstName.charAt(0)}${student.lastName.charAt(0)}</span>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="grid md:grid-cols-2 gap-3 text-sm">
+                                <div><strong>Student ID:</strong> ${student.id}</div>
+                                <div><strong>Name:</strong> ${student.firstName} ${student.lastName}</div>
+                                <div><strong>Grade:</strong> ${student.grade}</div>
+                                <div><strong>Age:</strong> ${student.age || 'Not specified'}</div>
+                                <div class="md:col-span-2"><strong>Email:</strong> ${student.email}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('paymentOptions').classList.remove('hidden');
+                document.getElementById('paymentIdRequired').style.display = 'none';
+                showNotification('Student ID verified successfully!');
+            } else {
+                showNotification('Invalid Student ID. Please check and try again.', 'error');
+                document.getElementById('paymentOptions').classList.add('hidden');
+            }
+        }
+
+        // Add Enter key functionality for payment verification
+        document.getElementById('paymentStudentId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verifyStudentForPayment();
+            }
+        });
+
+        // Open payment portal
+        function openPaymentPortal(type) {
+            currentPaymentType = type;
+            const amount = type === 'tuition' ? '$2,500' : '$450';
+            const reference = currentStudentId + '-' + type.toUpperCase() + '-' + Date.now();
+            
+            document.getElementById('paymentAmount').textContent = amount;
+            document.getElementById('paymentReference').textContent = reference;
+            document.getElementById('paymentPortal').classList.remove('hidden');
+        }
+
+        // Close payment portal
+        function closePaymentPortal() {
+            document.getElementById('paymentPortal').classList.add('hidden');
+            document.getElementById('receiptUpload').value = '';
+        }
+
+        // Copy account number
+        function copyAccountNumber() {
+            const accountNumber = document.getElementById('accountNumber').textContent;
+            navigator.clipboard.writeText(accountNumber).then(() => {
+                showNotification('Account number copied to clipboard!');
+            });
+        }
+
+        // Submit payment
+        async function submitPayment() {
+            const receiptFile = document.getElementById('receiptUpload').files[0];
+            
+            if (!receiptFile) {
+                showNotification('Please upload a payment receipt', 'error');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = document.querySelector('#paymentPortal button[onclick="submitPayment()"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Processing...';
+            submitBtn.disabled = true;
+            
+            // Create payment data without heavy file processing
+            const student = students.find(s => s.id === currentStudentId);
+            const paymentData = {
+                studentId: currentStudentId,
+                studentName: student ? `${student.firstName} ${student.lastName}` : 'Unknown',
+                paymentType: currentPaymentType,
+                amount: currentPaymentType === 'tuition' ? '$2,500' : '$450',
+                reference: document.getElementById('paymentReference').textContent,
+                receipt: receiptFile.name, // Just store filename instead of full file
+                timestamp: new Date().toISOString(),
+                submissionDate: new Date().toISOString().split('T')[0]
+            };
+            
+            // Reset button immediately
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+            
+            // Show immediate success
+            showNotification('Payment submitted successfully! We will verify and update your account within 24 hours.');
+            
+            // Close portal immediately
+            closePaymentPortal();
+            
+            // Submit to Google Sheets in background (non-blocking)
+            submitToGoogleSheets(SCRIPT_URL, {
+                action: 'payment',
+                ...paymentData
+            }).then(success => {
+                if (!success) {
+                    console.log('Background sync to Google Sheets failed');
+                }
+            });
+        }
+
+        // Mobile menu functions
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const menuIcon = document.getElementById('menuIcon');
+            const closeIcon = document.getElementById('closeIcon');
+            
+            if (mobileMenu.classList.contains('hidden')) {
+                mobileMenu.classList.remove('hidden');
+                menuIcon.classList.add('hidden');
+                closeIcon.classList.remove('hidden');
+            } else {
+                mobileMenu.classList.add('hidden');
+                menuIcon.classList.remove('hidden');
+                closeIcon.classList.add('hidden');
+            }
+        }
+        
+        function closeMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const menuIcon = document.getElementById('menuIcon');
+            const closeIcon = document.getElementById('closeIcon');
+            
+            mobileMenu.classList.add('hidden');
+            menuIcon.classList.remove('hidden');
+            closeIcon.classList.add('hidden');
+        }
+
+        // Initialize with home section
+        showSection('home');
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f1b5b6956fbbd1',t:'MTc1NTE4NzY5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
